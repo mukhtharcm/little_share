@@ -5,22 +5,17 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 final supabaseProvider =
     riverpod.Provider<SupabaseClient>((ref) => Supabase.instance.client);
 
-final authStateChangeProvider = riverpod.StreamProvider<AuthChangeEvent>((ref) {
-  return SupabaseAuth.instance.onAuthChange;
-});
-
 final currentUserProvider = riverpod.Provider<User?>((ref) {
-  return ref.read(supabaseProvider).auth.currentUser;
+  return ref.watch(supabaseProvider).auth.currentUser;
 });
 
-class UserState extends riverpod.StateNotifier<User?> {
+class UserStateNotifier extends riverpod.StateNotifier<User?> {
   riverpod.Ref ref;
-  UserState(this.ref) : super(null) {
+  UserStateNotifier(this.ref) : super(null) {
     state = ref.read(currentUserProvider);
   }
 
   Future login({required String email, required String password}) async {
-    print("Loggin In blahba....");
     await ref
         .read(supabaseProvider)
         .auth
@@ -33,18 +28,23 @@ class UserState extends riverpod.StateNotifier<User?> {
                   : 'io.supabase.flutterquickstart://login-callback/',
             ))
         .then((value) {
-      print("Logged In");
+      debugPrint("Login success: $value");
       state = value.user;
     });
   }
 
-  Future signUp(String email, String password) async {
-    final response = await ref
-        .read(supabaseProvider)
-        .auth
-        .signUp(email, password)
-        .then((value) {
-      print("Logged In");
+  Future signUp({
+    required String email,
+    required String password,
+    required String username,
+  }) async {
+    debugPrint(username);
+    await ref.read(supabaseProvider).auth.signUp(
+      email,
+      password,
+      userMetadata: {"username": username},
+    ).then((value) {
+      debugPrint("Signup success: $value");
       state = value.user;
     });
   }
@@ -55,6 +55,7 @@ class UserState extends riverpod.StateNotifier<User?> {
   }
 }
 
-final userProvider = riverpod.StateNotifierProvider<UserState, User?>((ref) {
-  return UserState(ref);
+final userProvider =
+    riverpod.StateNotifierProvider<UserStateNotifier, User?>((ref) {
+  return UserStateNotifier(ref);
 });

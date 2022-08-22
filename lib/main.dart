@@ -11,6 +11,8 @@ import 'package:little_share/shared/environment.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  Routemaster.setPathUrlStrategy();
+
   await dotenv.load();
 
   await supab.Supabase.initialize(
@@ -30,7 +32,7 @@ class MyApp extends ConsumerWidget {
       title: 'Flutter Demo',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        primarySwatch: Colors.blue,
+        primarySwatch: Colors.deepPurple,
         fontFamily: GoogleFonts.comfortaa().fontFamily,
       ),
       routeInformationParser: const RoutemasterParser(),

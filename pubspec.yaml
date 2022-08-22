@@ -28,12 +28,14 @@ environment:
 # versions available, run `flutter pub outdated`.
 dependencies:
   cupertino_icons: ^1.0.2
+  file_picker: ^5.0.1
   flutter:
     sdk: flutter
   flutter_dotenv: ^5.0.2
   flutter_riverpod: ^1.0.4
   google_fonts: ^3.0.1
   routemaster: ^1.0.1
+  shimmer: ^2.0.0
   supabase_flutter: ^1.0.0-dev.4
 
 dev_dependencies:

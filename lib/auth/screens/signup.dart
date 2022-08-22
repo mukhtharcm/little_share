@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:little_share/shared/supabase.dart';
+import 'package:little_share/shared/utils.dart';
 import 'package:routemaster/routemaster.dart';
 
 class SignUpView extends ConsumerStatefulWidget {
@@ -14,6 +15,46 @@ class _SignUpViewState extends ConsumerState<SignUpView> {
   bool _isLoading = false;
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _userNameController = TextEditingController();
+  String _userNameErrorText = "";
+
+  final Debouncer _debouncer = Debouncer(milliseconds: 500);
+
+  Future _checkUserNameExist(String username) async {
+    setState(() {
+      _userNameErrorText = "";
+      _isLoading = true;
+    });
+    try {
+      return await ref
+          .read(supabaseProvider)
+          .from("profiles")
+          .select()
+          .filter("username", "eq", username)
+          .then((value) {
+        if (value.length > 0) {
+          setState(() {
+            _isLoading = false;
+            _userNameErrorText = "Username already exist";
+          });
+          debugPrint("Username already exist");
+          return true;
+        } else {
+          setState(() {
+            _isLoading = false;
+          });
+          debugPrint("Username not exist");
+          return false;
+        }
+      });
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+      debugPrint(e.toString());
+      rethrow;
+    }
+  }
 
   Future<void> _signUp() async {
     setState(() {
@@ -22,8 +63,9 @@ class _SignUpViewState extends ConsumerState<SignUpView> {
 
     try {
       await ref.read(userProvider.notifier).signUp(
-            _emailController.text,
-            _passwordController.text,
+            email: _emailController.text,
+            password: _passwordController.text,
+            username: _userNameController.text,
           );
       // context.showSnackBar(message: 'Check your email for login link!');
       ScaffoldMessenger.of(context)
@@ -71,6 +113,20 @@ class _SignUpViewState extends ConsumerState<SignUpView> {
               decoration: const InputDecoration(
                 labelText: 'Password',
               ),
+            ),
+            TextFormField(
+              controller: _userNameController,
+              onChanged: ((value) {
+                _debouncer.run(() {
+                  debugPrint(value);
+                  _checkUserNameExist(_userNameController.text);
+                });
+              }),
+              decoration: InputDecoration(
+                  labelText: 'Username',
+                  errorText: _userNameErrorText.isNotEmpty
+                      ? _userNameErrorText
+                      : null),
             ),
             const SizedBox(height: 18),
             GestureDetector(
